@@ -1,12 +1,12 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
-from db import mysql
+from models import database
 
 contacts = Blueprint('contacts', __name__, template_folder='app/templates')
 
 
 @contacts.route('/')
 def Index():
-    cur = mysql.connection.cursor()
+    cur = database.cursor()
     cur.execute('SELECT * FROM contacts')
     data = cur.fetchall()
     cur.close()
@@ -20,10 +20,10 @@ def add_contact():
         phone = request.form['phone']
         email = request.form['email']
         try:
-            cur = mysql.connection.cursor()
+            cur = database.cursor()
             cur.execute(
                 "INSERT INTO contacts (fullname, phone, email) VALUES (%s,%s,%s)", (fullname, phone, email))
-            mysql.connection.commit()
+            database.commit()
             flash('Contact Added successfully')
             return redirect(url_for('contacts.Index'))
         except Exception as e:
@@ -33,7 +33,7 @@ def add_contact():
 
 @contacts.route('/edit/<id>', methods=['POST', 'GET'])
 def get_contact(id):
-    cur = mysql.connection.cursor()
+    cur = database.cursor()
     cur.execute('SELECT * FROM contacts WHERE id = %s', (id))
     data = cur.fetchall()
     cur.close()
@@ -47,7 +47,7 @@ def update_contact(id):
         fullname = request.form['fullname']
         phone = request.form['phone']
         email = request.form['email']
-        cur = mysql.connection.cursor()
+        cur = database.cursor()
         cur.execute("""
             UPDATE contacts
             SET fullname = %s,
@@ -56,14 +56,14 @@ def update_contact(id):
             WHERE id = %s
         """, (fullname, email, phone, id))
         flash('Contact Updated Successfully')
-        mysql.connection.commit()
+        database.commit()
         return redirect(url_for('contacts.Index'))
 
 
 @contacts.route('/delete/<string:id>', methods=['POST', 'GET'])
 def delete_contact(id):
-    cur = mysql.connection.cursor()
+    cur = database.cursor()
     cur.execute('DELETE FROM contacts WHERE id = {0}'.format(id))
-    mysql.connection.commit()
+    database.commit()
     flash('Contact Removed Successfully')
     return redirect(url_for('contacts.Index'))
